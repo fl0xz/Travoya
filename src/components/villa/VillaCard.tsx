@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FaHeart, FaMapMarkerAlt, FaWifi, FaSwimmingPool, FaCar, FaUmbrellaBeach, FaStore, FaUtensils } from 'react-icons/fa';
 
 interface VillaCardProps {
   id: string;
@@ -29,50 +30,91 @@ export const VillaCard: React.FC<VillaCardProps> = ({
   rating,
   amenities,
 }) => {
+  const getAmenityIcon = (amenity: string) => {
+    switch (amenity.toLowerCase()) {
+      case 'wifi': return <FaWifi />;
+      case 'pool': return <FaSwimmingPool />;
+      case 'parking': return <FaCar />;
+      case 'beach access': return <FaUmbrellaBeach />;
+      default: return null;
+    }
+  };
+
   return (
     <Link href={`/villa/${id}`} className="group">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
-        <div className="relative h-64">
-          <Image
-            src={imageUrl}
-            alt={title}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-lg shadow-md">
-            <span className="text-sm font-semibold">★ {rating.toFixed(1)}</span>
-          </div>
-        </div>
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <p className="text-gray-600">{location}</p>
-          
-          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-            <span>{bedrooms} beds</span>
-            <span>•</span>
-            <span>{bathrooms} baths</span>
-          </div>
-
-          <div className="mt-2 flex flex-wrap gap-2">
-            {amenities.slice(0, 3).map(amenity => (
-              <span 
-                key={amenity}
-                className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+        <div className="flex">
+          {/* Left side with image */}
+          <div className="w-[60%]">
+            <div className="relative h-64">
+              <Image
+                src={imageUrl}
+                alt={title}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute top-4 right-4 bg-white px-2 py-1 rounded-lg shadow-md">
+                <span className="text-xs font-medium">★ {rating.toFixed(1)}</span>
+              </div>
+              <button 
+                className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-md hover:scale-110 transition-transform"
+                onClick={(e) => {
+                  e.preventDefault();
+                  // Add to favorites functionality here
+                }}
               >
-                {amenity}
-              </span>
-            ))}
+                <FaHeart className="w-3 h-3 text-gray-400 hover:text-red-500" />
+              </button>
+            </div>
           </div>
 
-          <div className="mt-2 text-sm text-gray-500">
-            <p>Nearest Supermarket: {nearestSupermarket}</p>
-            <p>Nearest Restaurant: {nearestRestaurant}</p>
-          </div>
+          {/* Right side with details */}
+          <div className="w-[40%] p-4 flex flex-col justify-between border-l">
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">{title}</h3>
+                <div className="flex items-center text-xs text-gray-600">
+                  <FaMapMarkerAlt className="w-3 h-3 mr-1 flex-shrink-0" />
+                  <p className="line-clamp-1">{location}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2 text-xs text-gray-500 border-t border-b border-gray-100 py-2">
+                <span>{bedrooms} beds</span>
+                <span>•</span>
+                <span>{bathrooms} baths</span>
+              </div>
 
-          <div className="mt-4">
-            <div>
-              <span className="text-lg font-bold">£{price}</span>
-              <span className="text-gray-600"> / night</span>
+              <div className="flex flex-wrap gap-2">
+                {amenities.slice(0, 4).map(amenity => {
+                  const icon = getAmenityIcon(amenity);
+                  return icon && (
+                    <div 
+                      key={amenity}
+                      className="w-7 h-7 flex items-center justify-center bg-blue-50 rounded-md text-blue-600 hover:bg-blue-100"
+                      title={amenity}
+                    >
+                      {icon}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-2">
+                <div className="flex items-center text-xs text-gray-500" title="Distance to nearest supermarket">
+                  <FaStore className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                  <span>{nearestSupermarket}</span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500" title="Distance to nearest restaurant">
+                  <FaUtensils className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                  <span>{nearestRestaurant}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1 text-xs pt-3 border-t border-gray-100 mt-3">
+              <span className="font-medium">£{price}</span>
+              <span className="text-gray-600">per night</span>
             </div>
           </div>
         </div>

@@ -16,7 +16,13 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  output: 'standalone'
+  output: 'standalone',
+  webpack: (config) => {
+    config.externals.push({
+      'leaflet': 'L',
+    });
+    return config;
+  }
 };
 
 module.exports = nextConfig; 

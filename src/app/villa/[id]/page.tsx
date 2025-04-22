@@ -2,8 +2,9 @@
 
 import { Navbar } from '../../../components/layout/Navbar';
 import { useState } from 'react';
-import { FaStar, FaBed, FaBath, FaSwimmingPool, FaWifi, FaParking, FaUmbrellaBeach, FaSnowflake, FaTree, FaPlane, FaInfoCircle, FaShoppingBag, FaUtensils, FaTv, FaCoffee, FaHotTub, FaFan, FaDoorOpen, FaKey, FaShower, FaToilet, FaSink, FaChair, FaTable, FaGlassMartiniAlt, FaSwimmer, FaSun, FaMoon } from 'react-icons/fa';
+import { FaStar, FaBed, FaBath, FaSwimmingPool, FaWifi, FaParking, FaUmbrellaBeach, FaSnowflake, FaTree, FaPlane, FaInfoCircle, FaShoppingBag, FaUtensils, FaTv, FaCoffee, FaHotTub, FaFan, FaDoorOpen, FaKey, FaShower, FaToilet, FaSink, FaChair, FaTable, FaGlassMartiniAlt, FaSwimmer, FaSun, FaMoon, FaHeart } from 'react-icons/fa';
 import Image from 'next/image';
+import Map from '@/components/map/Map';
 
 const mockVilla = {
   id: '1',
@@ -76,6 +77,7 @@ const mockVilla = {
     joined: '2018',
     responseRate: '98%',
     responseTime: 'within an hour',
+    isOnline: true,
   },
   reviews: [
     {
@@ -95,17 +97,19 @@ const mockVilla = {
       comment: 'Great stay overall. The villa was clean and well-equipped. The only minor issue was the distance to the nearest restaurant.',
     },
   ],
+  coordinates: {
+    lat: 28.8638, // Playa Blanca coordinates
+    lng: -13.8534
+  }
 };
 
 const flights = [
   {
     id: 1,
     airline: 'Ryanair',
-    airlineLogo: '/images/airlines/ryanair.png',
     departureTime: '06:45',
     arrivalTime: '10:35',
     duration: '3h 50m',
-    price: 89,
     stops: 'Nonstop',
     departureAirport: 'LTN',
     arrivalAirport: 'ACE',
@@ -114,11 +118,9 @@ const flights = [
   {
     id: 2,
     airline: 'Ryanair',
-    airlineLogo: '/images/airlines/ryanair.png',
     departureTime: '21:15',
     arrivalTime: '01:05',
     duration: '3h 50m',
-    price: 102,
     stops: 'Nonstop',
     departureAirport: 'LTN',
     arrivalAirport: 'ACE',
@@ -127,11 +129,9 @@ const flights = [
   {
     id: 3,
     airline: 'EasyJet',
-    airlineLogo: '/images/airlines/easyjet.png',
     departureTime: '07:30',
     arrivalTime: '11:20',
     duration: '3h 50m',
-    price: 95,
     stops: 'Nonstop',
     departureAirport: 'LTN',
     arrivalAirport: 'ACE',
@@ -143,9 +143,14 @@ export default function VillaPage({ params }: { params: { id: string } }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [showAllImages, setShowAllImages] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(flights[0]);
-  const [guests, setGuests] = useState(2);
+  const [adults, setAdults] = useState(2);
+  const [childrenOver2, setChildrenOver2] = useState(0);
+  const [childrenUnder2, setChildrenUnder2] = useState(0);
   const [checkInDate, setCheckInDate] = useState<string | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const totalGuests = adults + childrenOver2 + childrenUnder2;
 
   const additionalFees = {
     cleaningFee: 50,
@@ -155,327 +160,317 @@ export default function VillaPage({ params }: { params: { id: string } }) {
 
   const calculateTotal = () => {
     const villaCost = mockVilla.price * 10;
-    const flightCost = selectedFlight.price * guests;
     const fees = additionalFees.cleaningFee + additionalFees.serviceFee + additionalFees.localTax;
-    return villaCost + flightCost + fees;
+    return villaCost + fees;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Image Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="md:col-span-2 row-span-2">
-            <img
-              src={mockVilla.images[selectedImage]}
-              alt={mockVilla.title}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          {mockVilla.images.slice(1, 5).map((image, index) => (
-            <div
-              key={index}
-              className="cursor-pointer"
-              onClick={() => setSelectedImage(index + 1)}
-            >
+    <>
+      <style jsx global>{`
+        @keyframes blob {
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animate-pulse {
+          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.2;
+          }
+          50% {
+            opacity: 0.3;
+          }
+        }
+        @keyframes takeoff {
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+          }
+          100% {
+            transform: translate(-20px, -20px) rotate(360deg);
+            opacity: 1;
+          }
+        }
+        .book-now-button:hover .logo-icon {
+          animation: takeoff 0.6s ease-out forwards;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Image Gallery */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="md:col-span-2 row-span-2">
               <img
-                src={image}
-                alt={`${mockVilla.title} - ${index + 2}`}
+                src={mockVilla.images[selectedImage]}
+                alt={mockVilla.title}
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>
-          ))}
-        </div>
-
-        {!showAllImages && (
-          <button
-            onClick={() => setShowAllImages(true)}
-            className="w-full py-3 bg-white border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 mb-8"
-          >
-            Show all photos
-          </button>
-        )}
-
-        {showAllImages && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {mockVilla.images.map((image, index) => (
+            {mockVilla.images.slice(1, 5).map((image, index) => (
               <div
                 key={index}
                 className="cursor-pointer"
-                onClick={() => setSelectedImage(index)}
+                onClick={() => setSelectedImage(index + 1)}
               >
                 <img
                   src={image}
-                  alt={`${mockVilla.title} - ${index + 1}`}
+                  alt={`${mockVilla.title} - ${index + 2}`}
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
             ))}
           </div>
-        )}
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h1 className="text-2xl font-semibold mb-2">{mockVilla.title}</h1>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <div className="flex items-center">
-                      <FaStar className="text-yellow-400 mr-1 text-xs" />
-                      <span>{mockVilla.rating}</span>
-                    </div>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-gray-600">{mockVilla.location}</span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-right text-sm">
-                    <p className="font-medium">Hosted by {mockVilla.host.name}</p>
-                    <p className="text-gray-500 text-xs">Member since {mockVilla.host.joined}</p>
-                  </div>
+          {!showAllImages && (
+            <button
+              onClick={() => setShowAllImages(true)}
+              className="w-full py-3 bg-white border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 mb-8"
+            >
+              Show all photos
+            </button>
+          )}
+
+          {showAllImages && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {mockVilla.images.map((image, index) => (
+                <div
+                  key={index}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedImage(index)}
+                >
                   <img
-                    src={mockVilla.host.avatar}
-                    alt={mockVilla.host.name}
-                    className="w-12 h-12 rounded-full object-cover"
+                    src={image}
+                    alt={`${mockVilla.title} - ${index + 1}`}
+                    className="w-full h-full object-cover rounded-lg"
                   />
-                </div>
-              </div>
-
-              <div className="border-t border-b py-6 mb-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <FaBed className="text-gray-500 text-sm" />
-                    <span>{mockVilla.bedrooms} bedrooms</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <FaBath className="text-gray-500 text-sm" />
-                    <span>{mockVilla.bathrooms} bathrooms</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <FaSwimmingPool className="text-gray-500 text-sm" />
-                    <span>Private pool</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <FaWifi className="text-gray-500 text-sm" />
-                    <span>WiFi</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-6">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                    <FaStar className="text-red-500" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Superhost</h3>
-                  <p className="text-sm text-gray-600">
-                    {mockVilla.host.name} is a Superhost with a {mockVilla.host.responseRate} response rate and typically responds {mockVilla.host.responseTime}.
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-gray-700 text-sm mb-6">{mockVilla.description}</p>
-              <p className="text-gray-700 text-sm mb-6">{mockVilla.detailedDescription}</p>
-
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-4">Amenities</h2>
-                <div className="flex flex-wrap gap-2">
-                  {mockVilla.amenities.map((amenity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 bg-gray-50 px-3 py-1 rounded-full text-xs"
-                    >
-                      <amenity.icon className="text-gray-500 text-xs" />
-                      <span>{amenity.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-4">House Rules</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {mockVilla.houseRules.map((rule, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-gray-600 text-sm">
-                      <span className="text-gray-400">•</span>
-                      <span>{rule}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Map Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4">Location</h2>
-              <div className="aspect-w-16 aspect-h-9 mb-4">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11199.999999999998!2d-13.827999999999999!3d28.864999999999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xc461f4c32b9d8a9%3A0x3d2f2b8b4c8c8c8c!2sPlaya%20Blanca%2C%20Lanzarote%2C%20Spain!5e0!3m2!1sen!2sus!4v1234567890!5m2!1sen!2sus&markers=color:red%7C28.864999999999998,-13.827999999999999"
-                  width="100%"
-                  height="450"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-lg"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-2">Nearby Attractions</h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-center">
-                      <FaUmbrellaBeach className="mr-2 text-gray-400" />
-                      Playa Blanca Beach - 0.5 km
-                    </li>
-                    <li className="flex items-center">
-                      <FaTree className="mr-2 text-gray-400" />
-                      Timanfaya National Park - 15 km
-                    </li>
-                    <li className="flex items-center">
-                      <FaSwimmingPool className="mr-2 text-gray-400" />
-                      Marina Rubicon - 2 km
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">Getting Around</h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-center">
-                      <FaParking className="mr-2 text-gray-400" />
-                      Free parking on premises
-                    </li>
-                    <li className="flex items-center">
-                      <FaPlane className="mr-2 text-gray-400" />
-                      Lanzarote Airport (ACE) - 30 km
-                    </li>
-                    <li className="flex items-center">
-                      <FaWifi className="mr-2 text-gray-400" />
-                      Public transport nearby
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Reviews</h2>
-              {mockVilla.reviews.map((review) => (
-                <div key={review.id} className="border-b last:border-b-0 py-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <img
-                      src={review.avatar}
-                      alt={review.author}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <h3 className="font-medium text-sm">{review.author}</h3>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>{review.date}</span>
-                        <span>•</span>
-                        <div className="flex items-center">
-                          <FaStar className="text-yellow-400 mr-1 text-xs" />
-                          <span>{review.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm">{review.comment}</p>
                 </div>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Right Column */}
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
-              {/* Flights Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold mb-4">Available Flights</h2>
-                <div className="space-y-2">
-                  {flights.map((flight) => (
-                    <div
-                      key={flight.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedFlight.id === flight.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedFlight(flight)}
-                    >
-                      <div className="flex items-center justify-between">
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                {/* Header Section */}
+                <div className="flex items-start justify-between mb-8">
+                  <div>
+                    <h1 className="text-2xl font-semibold mb-2">{mockVilla.title}</h1>
+                    <div className="flex items-center space-x-2 text-sm">
+                      <div className="flex items-center">
+                        <FaStar className="text-yellow-400 mr-1 text-xs" />
+                        <span>{mockVilla.rating}</span>
+                      </div>
+                      <span className="text-gray-500">•</span>
+                      <span className="text-gray-600">{mockVilla.location}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="text-right text-sm">
+                      <p className="font-medium">Hosted by {mockVilla.host.name}</p>
+                      <p className="text-gray-500 text-xs">Member since {mockVilla.host.joined}</p>
+                    </div>
+                    <div className="relative ml-4">
+                      <img
+                        src={mockVilla.host.avatar}
+                        alt={mockVilla.host.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      {mockVilla.host.isOnline && (
+                        <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Superhost Section */}
+                <div className="relative overflow-hidden">
+                  <div className="flex items-start space-x-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg mb-8 relative z-10">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <FaStar className="text-blue-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Superhost</h3>
+                      <p className="text-sm text-gray-600">
+                        {mockVilla.host.name} is a Superhost with a {mockVilla.host.responseRate} response rate and typically responds {mockVilla.host.responseTime}.
+                      </p>
+                    </div>
+                    <div className="absolute -top-4 -left-4 w-72 h-72 animate-blob">
+                      <div className="w-full h-full rounded-full bg-blue-100 opacity-20 blur-2xl transform scale-110 animate-pulse"></div>
+                    </div>
+                    <div className="absolute -bottom-4 -right-4 w-72 h-72 animate-blob animation-delay-2000">
+                      <div className="w-full h-full rounded-full bg-blue-200 opacity-20 blur-2xl transform scale-110 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description Section */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4">About this villa</h2>
+                  <div className="space-y-4">
+                    <p className="text-gray-700 text-sm">{mockVilla.description}</p>
+                    <p className="text-gray-700 text-sm">{mockVilla.detailedDescription}</p>
+                  </div>
+                </div>
+
+                {/* Amenities Section */}
+                <div className="border-t border-gray-100 pt-8 mb-8">
+                  <h2 className="text-lg font-semibold mb-4">Amenities</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {mockVilla.amenities.map((amenity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-3 text-sm"
+                      >
+                        <amenity.icon className="text-gray-500 text-sm flex-shrink-0" />
+                        <span className="text-gray-700">{amenity.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* House Rules Section */}
+                <div className="border-t border-gray-100 pt-8 mb-8">
+                  <h2 className="text-lg font-semibold mb-4">House Rules</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {mockVilla.houseRules.map((rule, index) => (
+                      <div key={index} className="flex items-center space-x-2 text-gray-600 text-sm">
+                        <span className="text-gray-400">•</span>
+                        <span>{rule}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Flights and Nearby Essentials Section */}
+                <div className="border-t border-gray-100 pt-8 mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Flights Section */}
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4">Available Flights</h3>
+                      <div className="space-y-3">
+                        {flights.map((flight) => (
+                          <div
+                            key={flight.id}
+                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                              selectedFlight.id === flight.id ? 'border-blue-500 bg-white' : 'bg-white hover:border-gray-300'
+                            }`}
+                            onClick={() => setSelectedFlight(flight)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center space-x-2 text-sm">
+                                  <span className="font-medium">{flight.departureTime}</span>
+                                  <span className="text-gray-400">-</span>
+                                  <span className="font-medium">{flight.arrivalTime}</span>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {flight.airline} • {flight.duration} • {flight.stops}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 text-center">
+                        <a 
+                          href="https://www.google.com/travel/flights" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                        >
+                          Check prices on Google Flights
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Nearby Essentials Section */}
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4">Nearby Essentials</h3>
+                      <div className="space-y-6">
                         <div>
-                          <div className="flex items-center space-x-2 text-sm">
-                            <span className="font-medium">{flight.departureTime}</span>
-                            <span className="text-gray-400">-</span>
-                            <span className="font-medium">{flight.arrivalTime}</span>
+                          <div className="flex items-center mb-3">
+                            <FaShoppingBag className="text-blue-500 mr-2" />
+                            <h3 className="text-sm font-medium">Supermarkets</h3>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {flight.airline} • {flight.duration} • {flight.stops}
+                          <div className="flex justify-between items-center text-sm">
+                            <span>Spar Express</span>
+                            <span className="text-gray-500">{mockVilla.nearestSupermarket}</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium text-sm">€{flight.price}</div>
-                          <div className="text-xs text-gray-500">per person</div>
+
+                        <div className="border-t border-gray-200 pt-4">
+                          <div className="flex items-center mb-3">
+                            <FaUtensils className="text-red-500 mr-2" />
+                            <h3 className="text-sm font-medium">Restaurants</h3>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span>La Taberna del Puerto</span>
+                            <span className="text-gray-500">{mockVilla.nearestRestaurant}</span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Nearby Essentials Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold mb-4">Nearby Essentials</h2>
-                <div className="space-y-4">
-                  {/* Supermarkets */}
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <FaShoppingBag className="text-blue-500 mr-2 text-sm" />
-                      <h3 className="text-sm font-medium">Supermarkets</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span>Spar Express</span>
-                        <span className="text-gray-500">{mockVilla.nearestSupermarket}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span>HiperDino</span>
-                        <span className="text-gray-500">2.5 km</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Restaurants */}
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <FaUtensils className="text-red-500 mr-2 text-sm" />
-                      <h3 className="text-sm font-medium">Restaurants</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span>La Taberna del Puerto</span>
-                        <span className="text-gray-500">{mockVilla.nearestRestaurant}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span>El Chiringuito</span>
-                        <span className="text-gray-500">9.2 km</span>
+                        <div className="border-t border-gray-200 pt-4">
+                          <div className="flex items-center mb-3">
+                            <FaUmbrellaBeach className="text-yellow-500 mr-2" />
+                            <h3 className="text-sm font-medium">Beaches</h3>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span>Playa Flamingo</span>
+                            <span className="text-gray-500">1.8 km</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Booking Section */}
+                {/* Map Section */}
+                <div className="border-t border-gray-100 pt-8">
+                  <h3 className="text-lg font-semibold mb-4">Location</h3>
+                  <div className="h-[400px] w-full relative z-0 rounded-xl overflow-hidden">
+                    <div className="h-full w-full">
+                      <Map 
+                        defaultCenter={{ lat: 28.8638, lng: -13.8534 }}
+                        markers={[{ lat: 28.8638, lng: -13.8534 }]}
+                        zoom={14}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm text-gray-600">
+                    Exact location provided after booking for privacy and security reasons.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Booking Card */}
+            <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <span className="text-xl font-semibold">€{mockVilla.price}</span>
+                    <span className="text-xl font-semibold">£{mockVilla.price}</span>
                     <span className="text-gray-500 text-sm"> / night</span>
                   </div>
                   <div className="flex items-center">
@@ -509,64 +504,116 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                   </div>
                   
                   <div className="border rounded-lg p-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                    <select 
-                      className="w-full text-sm"
-                      value={guests}
-                      onChange={(e) => setGuests(Number(e.target.value))}
-                    >
-                      <option value={1}>1 guest</option>
-                      <option value={2}>2 guests</option>
-                      <option value={3}>3 guests</option>
-                      <option value={4}>4 guests</option>
-                      <option value={5}>5+ guests</option>
-                    </select>
-                  </div>
-
-                  <div className="border-t pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Guests</label>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Villa (10 nights)</span>
-                        <span>€{mockVilla.price * 10}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Adults</span>
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => setAdults(Math.max(1, adults - 1))}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            -
+                          </button>
+                          <span className="text-sm">{adults}</span>
+                          <button 
+                            onClick={() => setAdults(adults + 1)}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Flights ({guests} {guests === 1 ? 'adult' : 'adults'})</span>
-                        <span>€{selectedFlight.price * guests}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Children (2-12)</span>
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => setChildrenOver2(Math.max(0, childrenOver2 - 1))}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            -
+                          </button>
+                          <span className="text-sm">{childrenOver2}</span>
+                          <button 
+                            onClick={() => setChildrenOver2(childrenOver2 + 1)}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Cleaning fee</span>
-                        <span>€{additionalFees.cleaningFee}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Service fee</span>
-                        <span>€{additionalFees.serviceFee}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Local tax</span>
-                        <span>€{additionalFees.localTax}</span>
-                      </div>
-                      <div className="border-t pt-3">
-                        <div className="flex justify-between font-semibold">
-                          <span>Total</span>
-                          <span>€{calculateTotal()}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Infants (under 2)</span>
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => setChildrenUnder2(Math.max(0, childrenUnder2 - 1))}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            -
+                          </button>
+                          <span className="text-sm">{childrenUnder2}</span>
+                          <button 
+                            onClick={() => setChildrenUnder2(childrenUnder2 + 1)}
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                          >
+                            +
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <button className="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors">
-                    Book Now
-                  </button>
+                  <div className="border-t pt-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 text-sm">Villa (10 nights)</span>
+                        <span className="text-sm">£{mockVilla.price * 10}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 text-sm">Cleaning fee</span>
+                        <span className="text-sm">£{additionalFees.cleaningFee}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 text-sm">Service fee</span>
+                        <span className="text-sm">£{additionalFees.serviceFee}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 text-sm">Local tax</span>
+                        <span className="text-sm">£{additionalFees.localTax}</span>
+                      </div>
+                      <div className="border-t pt-3">
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-sm">Total</span>
+                          <span className="text-sm">£{calculateTotal()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                  <div className="text-center text-sm text-gray-500">
+                  <div className="relative">
+                    <button className="book-now-button w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm">
+                      Book Now
+                      <div className="logo-icon absolute -bottom-2 -right-2 opacity-0">
+                        <div className="relative w-6 h-6 transform scale-75">
+                          <div className="absolute inset-0 bg-white rounded-md transform rotate-45" />
+                          <div className="absolute inset-[3px] bg-blue-600 rounded-[2px]" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="text-center text-xs text-gray-500">
                     You won't be charged yet
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 } 

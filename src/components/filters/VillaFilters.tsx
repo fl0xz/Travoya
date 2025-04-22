@@ -1,27 +1,47 @@
 'use client';
 
 import React, { useState } from 'react';
+import { FaFilter } from 'react-icons/fa';
+import { Slider } from '@mui/material';
 
-interface FilterState {
+export interface FilterState {
   priceRange: [number, number];
-  location: string;
-  bedrooms: number | '';
-  amenities: string[];
   maxSupermarketDistance: number;
   maxRestaurantDistance: number;
+  amenities: string[];
 }
 
-export const VillaFilters = () => {
-  const [filters, setFilters] = useState<FilterState>({
-    priceRange: [0, 1000],
-    location: '',
-    bedrooms: '',
-    amenities: [],
-    maxSupermarketDistance: 5,
-    maxRestaurantDistance: 5,
-  });
+interface VillaFiltersProps {
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+}
 
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function VillaFilters({ filters, onFiltersChange }: VillaFiltersProps) {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const handlePriceRangeChange = (_event: Event | null, newValue: number | number[]) => {
+    if (!Array.isArray(newValue)) return;
+    onFiltersChange({
+      ...filters,
+      priceRange: newValue as [number, number]
+    });
+  };
+
+  const handleSupermarketDistanceChange = (_event: Event | null, newValue: number | number[]) => {
+    const distance = Array.isArray(newValue) ? newValue[0] : newValue;
+    onFiltersChange({
+      ...filters,
+      maxSupermarketDistance: distance
+    });
+  };
+
+  const handleRestaurantDistanceChange = (_event: Event | null, newValue: number | number[]) => {
+    const distance = Array.isArray(newValue) ? newValue[0] : newValue;
+    onFiltersChange({
+      ...filters,
+      maxRestaurantDistance: distance
+    });
+  };
 
   const locations = [
     'All Locations',
@@ -41,131 +61,78 @@ export const VillaFilters = () => {
     'Parking',
   ];
 
-  const handleAmenityToggle = (amenity: string) => {
-    setFilters(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity],
-    }));
+  const handleAmenitiesChange = (amenity: string) => {
+    onFiltersChange({
+      ...filters,
+      amenities: filters.amenities.includes(amenity)
+        ? filters.amenities.filter((a: string) => a !== amenity)
+        : [...filters.amenities, amenity]
+    });
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md">
-      <div className="p-4 flex items-center justify-between border-b">
-        <div className="flex items-center space-x-6">
-          {/* Price Range */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Price:</span>
-            <div className="flex items-center space-x-2">
-              <input
-                type="number"
-                value={filters.priceRange[0]}
-                onChange={(e) => setFilters(prev => ({
-                  ...prev,
-                  priceRange: [parseInt(e.target.value), prev.priceRange[1]]
-                }))}
-                className="w-24 rounded-md text-sm"
-                min="0"
-                placeholder="Min"
+    <div className="relative inline-block">
+      <button
+        onClick={(): void => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 px-4 py-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
+      >
+        <FaFilter className="text-gray-500" />
+        <span>Filters</span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 mt-2 p-3 bg-white border rounded-lg shadow-lg w-64 z-50">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Price Range (£)
+              </label>
+              <Slider
+                value={filters.priceRange}
+                onChange={handlePriceRangeChange}
+                min={0}
+                max={1000}
+                valueLabelDisplay="auto"
+                size="small"
               />
-              <span>-</span>
-              <input
-                type="number"
-                value={filters.priceRange[1]}
-                onChange={(e) => setFilters(prev => ({
-                  ...prev,
-                  priceRange: [prev.priceRange[0], parseInt(e.target.value)]
-                }))}
-                className="w-24 rounded-md text-sm"
-                min="0"
-                placeholder="Max"
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>£{filters.priceRange[0]}</span>
+                <span>£{filters.priceRange[1]}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Max Distance to Supermarket (km)
+              </label>
+              <Slider
+                value={filters.maxSupermarketDistance}
+                onChange={handleSupermarketDistanceChange}
+                min={0}
+                max={5}
+                step={0.1}
+                valueLabelDisplay="auto"
+                size="small"
               />
             </div>
-          </div>
 
-          {/* Bedrooms */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Beds:</span>
-            <select
-              value={filters.bedrooms}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                bedrooms: e.target.value ? parseInt(e.target.value) : ''
-              }))}
-              className="w-28 rounded-md text-sm"
-            >
-              <option value="">Any</option>
-              {[1, 2, 3, 4, 5].map(num => (
-                <option key={num} value={num}>{num}+ beds</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-6">
-          {/* Distance Filters */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Supermarket:</span>
-            <select
-              value={filters.maxSupermarketDistance}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                maxSupermarketDistance: parseInt(e.target.value)
-              }))}
-              className="w-36 rounded-md text-sm"
-            >
-              <option value="5">Any distance</option>
-              <option value="0.5">Under 0.5 km</option>
-              <option value="1">Under 1 km</option>
-              <option value="2">Under 2 km</option>
-            </select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Restaurant:</span>
-            <select
-              value={filters.maxRestaurantDistance}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                maxRestaurantDistance: parseInt(e.target.value)
-              }))}
-              className="w-36 rounded-md text-sm"
-            >
-              <option value="5">Any distance</option>
-              <option value="0.5">Under 0.5 km</option>
-              <option value="1">Under 1 km</option>
-              <option value="2">Under 2 km</option>
-            </select>
-          </div>
-
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            {isExpanded ? 'Show less' : 'More filters'}
-          </button>
-        </div>
-      </div>
-
-      {/* Expandable Section */}
-      {isExpanded && (
-        <div className="p-4 border-t">
-          <div className="grid grid-cols-3 gap-4">
-            {amenitiesList.map(amenity => (
-              <label key={amenity} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={filters.amenities.includes(amenity)}
-                  onChange={() => handleAmenityToggle(amenity)}
-                  className="rounded text-blue-600"
-                />
-                <span className="text-sm">{amenity}</span>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Max Distance to Restaurants (km)
               </label>
-            ))}
+              <Slider
+                value={filters.maxRestaurantDistance}
+                onChange={handleRestaurantDistanceChange}
+                min={0}
+                max={5}
+                step={0.1}
+                valueLabelDisplay="auto"
+                size="small"
+              />
+            </div>
           </div>
         </div>
       )}
     </div>
   );
-}; 
+} 
