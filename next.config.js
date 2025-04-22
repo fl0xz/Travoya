@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['upload.wikimedia.org', 'www.ryanair.com', 'www.easyjet.com'],
+    domains: [
+      'upload.wikimedia.org',
+      'www.ryanair.com',
+      'www.easyjet.com',
+      'images.unsplash.com'
+    ],
     unoptimized: process.env.NODE_ENV === 'development',
   },
   compress: true,
