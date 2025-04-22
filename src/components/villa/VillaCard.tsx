@@ -30,7 +30,7 @@ export const VillaCard: React.FC<VillaCardProps> = ({
   amenities,
 }) => {
   return (
-    <Link href={`/villas/${id}`} className="group">
+    <Link href={`/villa/${id}`} className="group">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02]">
         <div className="relative h-64">
           <Image
@@ -69,14 +69,11 @@ export const VillaCard: React.FC<VillaCardProps> = ({
             <p>Nearest Restaurant: {nearestRestaurant}</p>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4">
             <div>
               <span className="text-lg font-bold">£{price}</span>
               <span className="text-gray-600"> / night</span>
             </div>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              View Details
-            </button>
           </div>
         </div>
       </div>
