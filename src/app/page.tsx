@@ -5,6 +5,7 @@ import { SearchBar } from '../components/search/SearchBar';
 import { VillaCard } from '../components/villa/VillaCard';
 import { VillaFilters } from '../components/filters/VillaFilters';
 import { VillaSorting } from '../components/sorting/VillaSorting';
+import { VillaMap } from '../components/map/VillaMap';
 import { useState } from 'react';
 
 const mockVillas = [
@@ -20,6 +21,10 @@ const mockVillas = [
     bathrooms: 2,
     rating: 4.8,
     amenities: ['Pool', 'Beach Access', 'WiFi', 'Parking'],
+    coordinates: {
+      lat: 28.8638,
+      lng: -13.8534
+    }
   },
   {
     id: '2',
@@ -33,6 +38,10 @@ const mockVillas = [
     bathrooms: 3,
     rating: 4.9,
     amenities: ['Pool', 'Garden', 'Air Conditioning', 'WiFi'],
+    coordinates: {
+      lat: 28.8672,
+      lng: -13.8602
+    }
   },
   {
     id: '3',
@@ -46,6 +55,10 @@ const mockVillas = [
     bathrooms: 4,
     rating: 4.7,
     amenities: ['Beach Access', 'Pool', 'Garden', 'Parking'],
+    coordinates: {
+      lat: 28.9223,
+      lng: -13.6588
+    }
   },
   {
     id: '4',
@@ -59,6 +72,10 @@ const mockVillas = [
     bathrooms: 2,
     rating: 4.6,
     amenities: ['Garden', 'Pool', 'WiFi', 'Air Conditioning'],
+    coordinates: {
+      lat: 28.9972,
+      lng: -13.4925
+    }
   },
   {
     id: '5',
@@ -72,6 +89,10 @@ const mockVillas = [
     bathrooms: 5,
     rating: 5.0,
     amenities: ['Pool', 'Beach Access', 'Garden', 'Parking'],
+    coordinates: {
+      lat: 28.9147,
+      lng: -13.7019
+    }
   },
   {
     id: '6',
@@ -85,6 +106,10 @@ const mockVillas = [
     bathrooms: 2,
     rating: 4.5,
     amenities: ['Pool', 'WiFi', 'Air Conditioning', 'Parking'],
+    coordinates: {
+      lat: 28.9522,
+      lng: -13.7674
+    }
   },
 ];
 
@@ -120,11 +145,8 @@ export default function Home() {
           </div>
 
           {showMap ? (
-            <div className="h-[600px] bg-gray-100 rounded-lg">
-              {/* Map component will be added here */}
-              <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500">Map view coming soon...</p>
-              </div>
+            <div className="h-[600px] bg-gray-100 rounded-lg overflow-hidden">
+              <VillaMap villas={mockVillas} />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
