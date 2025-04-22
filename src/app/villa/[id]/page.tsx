@@ -2,9 +2,10 @@
 
 import { Navbar } from '../../../components/layout/Navbar';
 import { useState } from 'react';
-import { FaStar, FaBed, FaBath, FaSwimmingPool, FaWifi, FaParking, FaUmbrellaBeach, FaSnowflake, FaTree, FaPlane, FaInfoCircle, FaShoppingBag, FaUtensils, FaTv, FaCoffee, FaHotTub, FaFan, FaDoorOpen, FaKey, FaShower, FaToilet, FaSink, FaChair, FaTable, FaGlassMartiniAlt, FaSwimmer, FaSun, FaMoon, FaHeart } from 'react-icons/fa';
+import { FaStar, FaBed, FaBath, FaSwimmingPool, FaWifi, FaParking, FaUmbrellaBeach, FaSnowflake, FaTree, FaPlane, FaInfoCircle, FaShoppingBag, FaUtensils, FaTv, FaCoffee, FaHotTub, FaFan, FaDoorOpen, FaKey, FaShower, FaToilet, FaSink, FaChair, FaTable, FaGlassMartiniAlt, FaSwimmer, FaSun, FaMoon, FaHeart, FaHome, FaUsers } from 'react-icons/fa';
 import Image from 'next/image';
 import Map from '@/components/map/Map';
+import Link from 'next/link';
 
 const mockVilla = {
   id: '1',
@@ -72,6 +73,7 @@ const mockVilla = {
     'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2940&auto=format&fit=crop',
   ],
   host: {
+    id: '1',
     name: 'Maria Rodriguez',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2787&auto=format&fit=crop',
     joined: '2018',
@@ -216,8 +218,8 @@ export default function VillaPage({ params }: { params: { id: string } }) {
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Image Gallery */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="md:col-span-2 row-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+            <div className="md:col-span-2 row-span-2 h-64 sm:h-auto">
               <img
                 src={mockVilla.images[selectedImage]}
                 alt={mockVilla.title}
@@ -227,7 +229,7 @@ export default function VillaPage({ params }: { params: { id: string } }) {
             {mockVilla.images.slice(1, 5).map((image, index) => (
               <div
                 key={index}
-                className="cursor-pointer"
+                className="cursor-pointer hidden md:block"
                 onClick={() => setSelectedImage(index + 1)}
               >
                 <img
@@ -239,21 +241,40 @@ export default function VillaPage({ params }: { params: { id: string } }) {
             ))}
           </div>
 
+          {/* Mobile Image Navigation */}
+          <div className="flex items-center justify-between mb-4 md:hidden">
+            <button 
+              onClick={() => setSelectedImage(prev => (prev > 0 ? prev - 1 : mockVilla.images.length - 1))}
+              className="p-2 bg-white rounded-full shadow-md"
+            >
+              ←
+            </button>
+            <span className="text-sm text-gray-500">
+              {selectedImage + 1} / {mockVilla.images.length}
+            </span>
+            <button 
+              onClick={() => setSelectedImage(prev => (prev < mockVilla.images.length - 1 ? prev + 1 : 0))}
+              className="p-2 bg-white rounded-full shadow-md"
+            >
+              →
+            </button>
+          </div>
+
           {!showAllImages && (
             <button
               onClick={() => setShowAllImages(true)}
-              className="w-full py-3 bg-white border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 mb-8"
+              className="w-full py-2 sm:py-3 bg-white border border-gray-200 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 mb-4 sm:mb-8"
             >
               Show all photos
             </button>
           )}
 
           {showAllImages && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               {mockVilla.images.map((image, index) => (
                 <div
                   key={index}
-                  className="cursor-pointer"
+                  className="cursor-pointer aspect-square"
                   onClick={() => setSelectedImage(index)}
                 >
                   <img
@@ -266,15 +287,39 @@ export default function VillaPage({ params }: { params: { id: string } }) {
             </div>
           )}
 
+          {/* Mobile Navigation Bar */}
+          <div className="md:hidden sticky top-0 bg-gradient-to-r from-blue-50 to-blue-100 shadow-sm z-50 mb-6">
+            <div className="flex justify-center overflow-x-auto hide-scrollbar">
+              <a href="#about" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                About
+              </a>
+              <a href="#amenities" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                Amenities
+              </a>
+              <a href="#flights" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                Flights
+              </a>
+              <a href="#nearby" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                Nearby
+              </a>
+              <a href="#location" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                Location
+              </a>
+              <a href="#book" className="flex-shrink-0 px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">
+                Book Now
+              </a>
+            </div>
+          </div>
+
           {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
             {/* Left Column */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
                 {/* Header Section */}
-                <div className="flex items-start justify-between mb-8">
-                  <div>
-                    <h1 className="text-2xl font-semibold mb-2">{mockVilla.title}</h1>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
+                  <div className="mb-4 sm:mb-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-2">{mockVilla.title}</h1>
                     <div className="flex items-center space-x-2 text-sm">
                       <div className="flex items-center">
                         <FaStar className="text-yellow-400 mr-1 text-xs" />
@@ -286,58 +331,54 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                   </div>
                   <div className="flex items-center">
                     <div className="text-right text-sm">
-                      <p className="font-medium">Hosted by {mockVilla.host.name}</p>
-                      <p className="text-gray-500 text-xs">Member since {mockVilla.host.joined}</p>
+                      <Link href={`/host/${mockVilla.host.id}`} className="hover:underline">
+                        <p className="font-medium">{mockVilla.host.name}</p>
+                        <p className="text-gray-500 text-xs">Member since {mockVilla.host.joined}</p>
+                      </Link>
                     </div>
-                    <div className="relative ml-4">
+                    <Link href={`/host/${mockVilla.host.id}`} className="relative ml-4">
                       <img
                         src={mockVilla.host.avatar}
                         alt={mockVilla.host.name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-10 sm:w-12 h-10 sm:h-12 rounded-full object-cover hover:opacity-90 transition-opacity"
                       />
                       {mockVilla.host.isOnline && (
                         <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
                       )}
-                    </div>
+                    </Link>
                   </div>
                 </div>
 
-                {/* Superhost Section */}
-                <div className="relative overflow-hidden">
-                  <div className="flex items-start space-x-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg mb-8 relative z-10">
+                {/* Superhost Section - Centered on mobile only */}
+                <div className="relative overflow-hidden mb-6 flex sm:block justify-center">
+                  <div className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg relative z-10 hover:shadow-md transition-all duration-300">
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <FaStar className="text-blue-500" />
+                      <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                        <FaStar className="text-yellow-500 text-sm sm:text-base animate-bounce" />
                       </div>
                     </div>
-                    <div>
+                    <div className="transform hover:scale-[1.02] transition-transform duration-300">
                       <h3 className="text-sm font-medium mb-1">Superhost</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm text-gray-600">
                         {mockVilla.host.name} is a Superhost with a {mockVilla.host.responseRate} response rate and typically responds {mockVilla.host.responseTime}.
                       </p>
-                    </div>
-                    <div className="absolute -top-4 -left-4 w-72 h-72 animate-blob">
-                      <div className="w-full h-full rounded-full bg-blue-100 opacity-20 blur-2xl transform scale-110 animate-pulse"></div>
-                    </div>
-                    <div className="absolute -bottom-4 -right-4 w-72 h-72 animate-blob animation-delay-2000">
-                      <div className="w-full h-full rounded-full bg-blue-200 opacity-20 blur-2xl transform scale-110 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
 
                 {/* Description Section */}
-                <div className="mb-8">
+                <div id="about" className="mb-6 sm:mb-8">
                   <h2 className="text-lg font-semibold mb-4">About this villa</h2>
                   <div className="space-y-4">
-                    <p className="text-gray-700 text-sm">{mockVilla.description}</p>
-                    <p className="text-gray-700 text-sm">{mockVilla.detailedDescription}</p>
+                    <p className="text-sm text-gray-700">{mockVilla.description}</p>
+                    <p className="text-sm text-gray-700">{mockVilla.detailedDescription}</p>
                   </div>
                 </div>
 
-                {/* Amenities Section */}
-                <div className="border-t border-gray-100 pt-8 mb-8">
+                {/* Amenities Section - Adjust grid for different screen sizes */}
+                <div id="amenities" className="border-t border-gray-100 pt-6 sm:pt-8 mb-6 sm:mb-8">
                   <h2 className="text-lg font-semibold mb-4">Amenities</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {mockVilla.amenities.map((amenity, index) => (
                       <div
                         key={index}
@@ -350,24 +391,11 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* House Rules Section */}
-                <div className="border-t border-gray-100 pt-8 mb-8">
-                  <h2 className="text-lg font-semibold mb-4">House Rules</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {mockVilla.houseRules.map((rule, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-gray-600 text-sm">
-                        <span className="text-gray-400">•</span>
-                        <span>{rule}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Flights and Nearby Essentials Section */}
-                <div className="border-t border-gray-100 pt-8 mb-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="flights" className="border-t border-gray-100 pt-6 sm:pt-8 mb-6 sm:mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {/* Flights Section */}
-                    <div className="bg-gray-50 rounded-xl p-6">
+                    <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
                       <h3 className="text-lg font-semibold mb-4">Available Flights</h3>
                       <div className="space-y-3">
                         {flights.map((flight) => (
@@ -406,9 +434,9 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                     </div>
 
                     {/* Nearby Essentials Section */}
-                    <div className="bg-gray-50 rounded-xl p-6">
+                    <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
                       <h3 className="text-lg font-semibold mb-4">Nearby Essentials</h3>
-                      <div className="space-y-6">
+                      <div className="space-y-4 sm:space-y-6">
                         <div>
                           <div className="flex items-center mb-3">
                             <FaShoppingBag className="text-blue-500 mr-2" />
@@ -447,9 +475,9 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                 </div>
 
                 {/* Map Section */}
-                <div className="border-t border-gray-100 pt-8">
+                <div id="location" className="border-t border-gray-100 pt-6 sm:pt-8">
                   <h3 className="text-lg font-semibold mb-4">Location</h3>
-                  <div className="h-[400px] w-full relative z-0 rounded-xl overflow-hidden">
+                  <div className="h-[300px] sm:h-[400px] w-full relative z-0 rounded-xl overflow-hidden">
                     <div className="h-full w-full">
                       <Map 
                         defaultCenter={{ lat: 28.8638, lng: -13.8534 }}
@@ -466,8 +494,8 @@ export default function VillaPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* Right Column - Booking Card */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
+            <div id="book" className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 sticky top-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <span className="text-xl font-semibold">£{mockVilla.price}</span>
@@ -481,21 +509,21 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                 
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border rounded-lg p-3">
+                    <div className="border rounded-lg p-3 hover:border-blue-300 transition-colors">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Check in</label>
                       <input 
                         type="date" 
-                        className="w-full text-sm"
+                        className="w-full text-sm bg-transparent focus:outline-none [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                         value={checkInDate || ''}
                         onChange={(e) => setCheckInDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
-                    <div className="border rounded-lg p-3">
+                    <div className="border rounded-lg p-3 hover:border-blue-300 transition-colors">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Check out</label>
                       <input 
                         type="date" 
-                        className="w-full text-sm"
+                        className="w-full text-sm bg-transparent focus:outline-none [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                         value={checkOutDate || ''}
                         onChange={(e) => setCheckOutDate(e.target.value)}
                         min={checkInDate || new Date().toISOString().split('T')[0]}
@@ -511,14 +539,14 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                         <div className="flex items-center space-x-2">
                           <button 
                             onClick={() => setAdults(Math.max(1, adults - 1))}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             -
                           </button>
-                          <span className="text-sm">{adults}</span>
+                          <span className="text-sm w-4 text-center">{adults}</span>
                           <button 
                             onClick={() => setAdults(adults + 1)}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             +
                           </button>
@@ -529,14 +557,14 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                         <div className="flex items-center space-x-2">
                           <button 
                             onClick={() => setChildrenOver2(Math.max(0, childrenOver2 - 1))}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             -
                           </button>
-                          <span className="text-sm">{childrenOver2}</span>
+                          <span className="text-sm w-4 text-center">{childrenOver2}</span>
                           <button 
                             onClick={() => setChildrenOver2(childrenOver2 + 1)}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             +
                           </button>
@@ -547,14 +575,14 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                         <div className="flex items-center space-x-2">
                           <button 
                             onClick={() => setChildrenUnder2(Math.max(0, childrenUnder2 - 1))}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             -
                           </button>
-                          <span className="text-sm">{childrenUnder2}</span>
+                          <span className="text-sm w-4 text-center">{childrenUnder2}</span>
                           <button 
                             onClick={() => setChildrenUnder2(childrenUnder2 + 1)}
-                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm"
+                            className="w-8 h-8 flex items-center justify-center border rounded-full text-sm hover:bg-blue-50 hover:border-blue-500 hover:text-blue-500 transition-colors"
                           >
                             +
                           </button>
@@ -591,17 +619,9 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                   </div>
 
                   <div className="relative">
-                    <button className="book-now-button w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm">
-                      Book Now
-                      <div className="logo-icon absolute -bottom-2 -right-2 opacity-0">
-                        <div className="relative w-6 h-6 transform scale-75">
-                          <div className="absolute inset-0 bg-white rounded-md transform rotate-45" />
-                          <div className="absolute inset-[3px] bg-blue-600 rounded-[2px]" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          </div>
-                        </div>
-                      </div>
+                    <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-500 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      <span className="relative z-10">Book Now</span>
                     </button>
                   </div>
 

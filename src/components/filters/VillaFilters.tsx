@@ -74,10 +74,10 @@ export default function VillaFilters({ filters, onFiltersChange }: VillaFiltersP
     <div className="relative inline-block">
       <button
         onClick={(): void => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-4 py-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
+        className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50"
       >
         <FaFilter className="text-gray-500" />
-        <span>Filters</span>
+        <span className="hidden sm:inline">Filters</span>
       </button>
 
       {isOpen && (

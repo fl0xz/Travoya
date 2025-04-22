@@ -16,14 +16,26 @@ interface MapProps {
 }
 
 export default function Map({ defaultCenter, markers, zoom = 13 }: MapProps) {
-  const { isLoaded } = useLoadScript({
+  const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
   });
 
   const center = useMemo(() => ({ lat: defaultCenter.lat, lng: defaultCenter.lng }), [defaultCenter]);
 
+  if (loadError) {
+    return (
+      <div className="h-[400px] w-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-500 text-sm">Unable to load map</p>
+      </div>
+    );
+  }
+
   if (!isLoaded) {
-    return <div className="h-[400px] w-full bg-gray-100 rounded-lg" />;
+    return (
+      <div className="h-[400px] w-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-500 text-sm">Loading map...</p>
+      </div>
+    );
   }
 
   return (
