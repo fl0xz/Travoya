@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaUsers } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaPlane } from 'react-icons/fa';
 
 // Define the shape of search parameters
 export type SearchParams = {
@@ -168,10 +168,12 @@ export function SearchBar({ onSearch }: SearchBarProps) {
 
         <button
           onClick={() => onSearch({ location, checkIn, checkOut, adults, children: childrenCount, infants })}
-          className="flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105"
+          className="group relative flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-lg overflow-hidden transition-all duration-500"
         >
-          <FaSearch className="h-5 w-5 mr-2" />
-          <span>Search</span>
+          {/* gradient animation overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <FaSearch className="h-5 w-5 mr-2 relative z-10" />
+          <span className="relative z-10">Search</span>
         </button>
       </div>
     </div>

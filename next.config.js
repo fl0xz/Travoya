@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['react-icons'],
+  },
   images: {
     domains: [
       'upload.wikimedia.org',
