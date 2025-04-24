@@ -105,52 +105,78 @@ const mockVilla = {
   }
 };
 
-const flights = [
-  {
-    id: 1,
-    airline: 'Ryanair',
-    departureTime: '06:45',
-    arrivalTime: '10:35',
-    duration: '3h 50m',
-    stops: 'Nonstop',
-    departureAirport: 'LTN',
-    arrivalAirport: 'ACE',
-    date: '17 Aug 2025',
-  },
-  {
-    id: 2,
-    airline: 'Ryanair',
-    departureTime: '21:15',
-    arrivalTime: '01:05',
-    duration: '3h 50m',
-    stops: 'Nonstop',
-    departureAirport: 'LTN',
-    arrivalAirport: 'ACE',
-    date: '17 Aug 2025',
-  },
-  {
-    id: 3,
-    airline: 'EasyJet',
-    departureTime: '07:30',
-    arrivalTime: '11:20',
-    duration: '3h 50m',
-    stops: 'Nonstop',
-    departureAirport: 'LTN',
-    arrivalAirport: 'ACE',
-    date: '17 Aug 2025',
-  },
-];
+// Define Flight type for fetched flights
+interface Flight {
+  id: number;
+  airline: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  stops: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  date: string;
+  price: number;
+}
 
 export default function VillaPage({ params }: { params: { id: string } }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [showAllImages, setShowAllImages] = useState(false);
-  const [selectedFlight, setSelectedFlight] = useState(flights[0]);
   const [adults, setAdults] = useState(2);
   const [childrenOver2, setChildrenOver2] = useState(0);
   const [childrenUnder2, setChildrenUnder2] = useState(0);
   const [checkInDate, setCheckInDate] = useState<string | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<string | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
+
+  const [origin, setOrigin] = useState('LTN');
+  const departureAirports = [
+    { code: 'LTN', label: 'London Luton (LTN)' },
+    { code: 'LHR', label: 'London Heathrow (LHR)' },
+    { code: 'MAN', label: 'Manchester (MAN)' },
+    { code: 'DUB', label: 'Dublin (DUB)' },
+  ];
+  const DESTINATION_AIRPORT = 'ACE';
+  const [filteredFlights, setFilteredFlights] = useState<Flight[] | null>(null);
+  const [loadingFlights, setLoadingFlights] = useState(false);
+  const [selectedFlightId, setSelectedFlightId] = useState<number | null>(null);
+  // Calculate nights between dates
+  const nights = checkInDate && checkOutDate
+    ? Math.max(1, Math.round((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  const searchFlights = async () => {
+    if (!checkInDate) return;
+    setLoadingFlights(true);
+    setFilteredFlights(null);
+    setSelectedFlightId(null);
+    try {
+      const res = await fetch(`/api/flights?origin=${origin}&dest=${DESTINATION_AIRPORT}&date=${checkInDate}`);
+      const data = await res.json();
+      setFilteredFlights(data.flights);
+    } catch (err) {
+      console.error(err);
+      setFilteredFlights([]);
+    }
+    setLoadingFlights(false);
+  };
+
+  const openGoogleFlights = () => {
+    if (!checkInDate || !checkOutDate) return;
+    const destAirport = DESTINATION_AIRPORT;
+    const pax = `${adults},${childrenOver2},${childrenUnder2}`;
+    const url = `https://www.google.com/travel/flights#search;f=${origin};t=${destAirport};d=${checkInDate};r=${checkOutDate};px=${pax}`;
+    window.open(url, '_blank');
+  };
+
+  const openGoogleFlightsForFlight = (flight: Flight) => {
+    if (!checkInDate || !checkOutDate) return;
+    const destAirport = DESTINATION_AIRPORT;
+    const pax = `${adults},${childrenOver2},${childrenUnder2}`;
+    const d = checkInDate;
+    const url = `https://www.google.com/travel/flights#search;f=${origin};t=${destAirport};d=${d};r=${checkOutDate};px=${pax}`;
+    window.open(url, '_blank');
+  };
 
   const totalGuests = adults + childrenOver2 + childrenUnder2;
 
@@ -161,9 +187,10 @@ export default function VillaPage({ params }: { params: { id: string } }) {
   };
 
   const calculateTotal = () => {
-    const villaCost = mockVilla.price * 10;
+    const villaCost = mockVilla.price * nights;
     const fees = additionalFees.cleaningFee + additionalFees.serviceFee + additionalFees.localTax;
-    return villaCost + fees;
+    const flightCost = filteredFlights?.find(f => f.id === selectedFlightId)?.price || 0;
+    return villaCost + fees + flightCost;
   };
 
   return (
@@ -398,39 +425,75 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                     <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
                       <h3 className="text-lg font-semibold mb-4">Available Flights</h3>
                       <div className="space-y-3">
-                        {flights.map((flight) => (
-                          <div
-                            key={flight.id}
-                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                              selectedFlight.id === flight.id ? 'border-blue-500 bg-white' : 'bg-white hover:border-gray-300'
-                            }`}
-                            onClick={() => setSelectedFlight(flight)}
+                        <div className="mb-4">
+                          <label htmlFor="origin-select" className="block text-sm font-medium text-gray-700 mb-1">Departure Airport</label>
+                          <select
+                            id="origin-select"
+                            value={origin}
+                            onChange={(e) => { setOrigin(e.target.value); setFilteredFlights(null); setSelectedFlightId(null); }}
+                            className="w-full text-sm border rounded-lg p-2 focus:outline-none"
                           >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="flex items-center space-x-2 text-sm">
-                                  <span className="font-medium">{flight.departureTime}</span>
-                                  <span className="text-gray-400">-</span>
-                                  <span className="font-medium">{flight.arrivalTime}</span>
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {flight.airline} • {flight.duration} • {flight.stops}
-                                </div>
-                              </div>
+                            {departureAirports.map((ap) => (
+                              <option key={ap.code} value={ap.code}>
+                                {ap.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mt-4 text-center">
+                          <button
+                            onClick={searchFlights}
+                            className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+                          >
+                            Search Flights
+                          </button>
+                        </div>
+                      </div>
+                      {checkInDate && (
+                        <div className="mt-4">
+                          {loadingFlights ? (
+                            <p className="text-center text-gray-500">Loading flights...</p>
+                          ) : filteredFlights === null ? (
+                            <p className="text-center text-gray-500">Please click 'Search Flights' to load flights for the selected dates.</p>
+                          ) : filteredFlights.length > 0 ? (
+                            <div className="space-y-2">
+                              {filteredFlights.map((flight) => {
+                                const isSelected = selectedFlightId === flight.id;
+                                return (
+                                  <div
+                                    key={flight.id}
+                                    className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+                                    onClick={() => setSelectedFlightId(flight.id)}
+                                  >
+                                    <div className="flex items-center">
+                                      <input
+                                        type="radio"
+                                        name="selectedFlight"
+                                        checked={isSelected}
+                                        onChange={() => setSelectedFlightId(flight.id)}
+                                        className="mr-2"
+                                      />
+                                      <div className="text-sm">
+                                        <div>{flight.departureTime} - {flight.arrivalTime}</div>
+                                        <div className="text-xs text-gray-500">{flight.airline} • {flight.duration}</div>
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); openGoogleFlightsForFlight(flight); }}
+                                      className="relative overflow-hidden group text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
+                                    >
+                                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                      <span className="relative z-10">Book</span>
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 text-center">
-                        <a 
-                          href="https://www.google.com/travel/flights" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
-                        >
-                          Check prices on Google Flights
-                        </a>
-                      </div>
+                          ) : (
+                            <p className="text-center text-gray-500">No flights found for the selected criteria.</p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Nearby Essentials Section */}
@@ -515,7 +578,7 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                         type="date" 
                         className="w-full text-sm bg-transparent focus:outline-none [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                         value={checkInDate || ''}
-                        onChange={(e) => setCheckInDate(e.target.value)}
+                        onChange={(e) => { setCheckInDate(e.target.value); setFilteredFlights(null); setSelectedFlightId(null); }}
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
@@ -525,7 +588,7 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                         type="date" 
                         className="w-full text-sm bg-transparent focus:outline-none [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                         value={checkOutDate || ''}
-                        onChange={(e) => setCheckOutDate(e.target.value)}
+                        onChange={(e) => { setCheckOutDate(e.target.value); setFilteredFlights(null); setSelectedFlightId(null); }}
                         min={checkInDate || new Date().toISOString().split('T')[0]}
                       />
                     </div>
@@ -591,11 +654,36 @@ export default function VillaPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
 
+                  {/* Flight Summary */}
+                  {filteredFlights !== null && (
+                    <div className="border-t pt-4 mb-4">
+                      {selectedFlightId ? (
+                        <>
+                          <h4 className="text-sm font-medium mb-2">Selected Flight</h4>
+                          <div className="flex justify-between items-center text-sm">
+                            <span>
+                              {(() => {
+                                const f = filteredFlights.find(f => f.id === selectedFlightId);
+                                return f ? `${f.departureTime} - ${f.arrivalTime}, ${f.airline}` : '';
+                              })()}
+                            </span>
+                            <span>£{(() => {
+                              const f = filteredFlights.find(f => f.id === selectedFlightId);
+                              return f ? f.price : '0';
+                            })()}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-500">Select a flight to add its price here.</p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="border-t pt-4">
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 text-sm">Villa (10 nights)</span>
-                        <span className="text-sm">£{mockVilla.price * 10}</span>
+                        <span className="text-gray-600 text-sm">Villa ({nights} nights)</span>
+                        <span className="text-sm">£{mockVilla.price * nights}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600 text-sm">Cleaning fee</span>
